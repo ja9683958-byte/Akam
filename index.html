@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>4-Video Scroll Landing (Imgur Supported)</title>
+
+<style>
+  html,body {
+    margin:0;
+    height:100%;
+    background:#000;
+    font-family:Arial, sans-serif;
+  }
+
+  .scroll-container {
+    height:100vh;
+    width:100vw;
+    overflow-y:auto;
+    scroll-snap-type:y mandatory;
+  }
+
+  .section {
+    height:100vh;
+    width:100%;
+    position:relative;
+    scroll-snap-align:start;
+    background:#000;
+  }
+
+  .section video {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    min-width:100%;
+    min-height:100%;
+    object-fit:cover;
+    width:auto;
+    height:auto;
+    background:#000;
+  }
+
+  .center-play {
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    pointer-events:none;
+    z-index:20;
+  }
+
+  .center-play .icon {
+    background:rgba(0,0,0,0.5);
+    padding:16px;
+    border-radius:50%;
+    font-size:22px;
+    pointer-events:auto;
+    cursor:pointer;
+    color:white;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scroll-container" id="scrollContainer"></div>
+
+<script>
+/*  
+   INSERT IMGUR MP4 LINKS HERE
+   Example direct Imgur video link:
+   https://i.imgur.com/VIDEO_ID.mp4
+*/
+
+const videoSources = [
+    "https://i.imgur.com/PxZhK0d.mp4",
+    "https://i.imgur.com/Imh0jQm.mp4",
+    "https://i.imgur.com/0WXMWgY.mp4",
+    "https://i.imgur.com/IQf8hLX.mp4"
+];
+
+// container
+const container = document.getElementById("scrollContainer");
+
+// build 4 sections
+videoSources.forEach((src, i) => {
+  const section = document.createElement("section");
+  section.className = "section";
+
+  const video = document.createElement("video");
+  video.src = src;
+  video.playsInline = true;
+  video.autoplay = true;
+  video.muted = true;
+  video.controls = true;
+  video.preload = "metadata";
+
+  const playOverlay = document.createElement("div");
+  playOverlay.className = "center-play";
+
+  const icon = document.createElement("div");
+  icon.className = "icon";
+  icon.textContent = "⏵︎";
+  icon.dataset.videoIndex = i;
+
+  playOverlay.appendChild(icon);
+  section.appendChild(video);
+  section.appendChild(playOverlay);
+  container.appendChild(section);
+});
+
+// intersection observer to auto-play/pause
+const videos = Array.from(document.querySelectorAll("video"));
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const vid = entry.target;
+    if (entry.intersectionRatio > 0.5) {
+      vid.play().catch(() => {});
+    } else {
+      if (!vid.paused) vid.pause();
+    }
+  });
+}, { threshold: [0.5] });
+
+videos.forEach(v => observer.observe(v));
+
+// overlay manual play/pause
+document.querySelectorAll(".icon").forEach(icon => {
+  icon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const index = icon.dataset.videoIndex;
+    const vid = videos[index];
+
+    if (vid.paused) {
+      vid.play();
+      icon.textContent = "⏸";
+    } else {
+      vid.pause();
+      icon.textContent = "⏵︎";
+    }
+  });
+});
+
+// clicking anywhere toggles play/pause
+document.querySelectorAll(".section").forEach((section, index) => {
+  section.addEventListener("click", (e) => {
+    if (e.target.classList.contains("icon")) return;
+    const vid = videos[index];
+
+    if (vid.paused) vid.play();
+    else vid.pause();
+  });
+});
+</script>
+</body>
+</html>
